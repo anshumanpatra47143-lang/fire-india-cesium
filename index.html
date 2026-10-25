@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>Fire India World Map</title>
+  <link rel="stylesheet"
+    href="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Widgets/widgets.css">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #101820;
+    }
+    #status {
+      position: absolute;
+      z-index: 2;
+      top: 8px;
+      left: 8px;
+      padding: 8px;
+      color: white;
+      background: #222b;
+      font: 14px sans-serif;
+    }
+  </style>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="status">Loading India 3D map...</div>
+  <script>
+    Cesium.Ion.defaultAccessToken =
+      "YOUR_NEW_CESIUM_ION_TOKEN";
+
+    async function startMap() {
+      const viewer = new Cesium.Viewer(
+        "cesiumContainer",
+        {
+          terrain: Cesium.Terrain.fromWorldTerrain(),
+          animation: false,
+          timeline: false,
+          baseLayerPicker: false,
+          geocoder: false,
+          homeButton: false,
+          sceneModePicker: false,
+          navigationHelpButton: false
+        }
+      );
+
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          84.8, 21.2, 2500000
+        ),
+        orientation: {
+          heading: 0,
+          pitch: Cesium.Math.toRadians(-45),
+          roll: 0
+        }
+      });
+
+      document.getElementById("status").textContent =
+        "Fire India World — India 3D Map";
+    }
+
+    startMap().catch(function (error) {
+      document.getElementById("status").textContent =
+        "Map error: " + error.message;
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
