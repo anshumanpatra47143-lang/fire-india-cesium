@@ -2,12 +2,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport"
-        content="width=device-width, initial-scale=1">
-  <title>Fire India World Map</title>
+        content="width=device-width, initial-scale=1.0">
+  <title>Fire India World</title>
+
   <link rel="stylesheet"
     href="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Widgets/widgets.css">
+
   <style>
     html, body, #cesiumContainer {
       width: 100%;
@@ -17,61 +19,181 @@
       overflow: hidden;
       background: #101820;
     }
+
     #status {
       position: absolute;
-      z-index: 2;
-      top: 8px;
-      left: 8px;
-      padding: 8px;
+      top: 12px;
+      left: 10px;
+      right: 10px;
+      z-index: 10;
+      padding: 12px;
       color: white;
-      background: #222b;
-      font: 14px sans-serif;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 8px;
+      font: 14px Arial, sans-serif;
+      overflow-wrap: anywhere;
+    }
+
+    #retry {
+      display: none;
+      margin-top: 8px;
+      padding: 8px 12px;
+      font-size: 15px;
     }
   </style>
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Cesium.js"></script>
+
+  <script>
+    window.cesiumScriptLoaded = false;
+  </script>
+
+  <script
+    src="https://cesium.com/downloads/cesiumjs/releases/1.146/Build/Cesium/Cesium.js"
+    onload="window.cesiumScriptLoaded = true"
+    onerror="window.cesiumScriptLoaded = false">
+  </script>
 </head>
+
 <body>
   <div id="cesiumContainer"></div>
-  <div id="status">Loading India 3D map...</div>
+
+  <div id="status">
+    Fire India World: Cesium loading...
+    <br>
+    इंटरनेट कनेक्शन जाँचा जा रहा है।
+    <button id="retry" onclick="startMap()">
+      Retry Map
+    </button>
+  </div>
+
   <script>
-    Cesium.Ion.defaultAccessToken =
-      eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IjhpUjg2MmVQM3VaTWNWLUsiLCJqdGkiOiIwNTljMjZlNC1hYTY4LTRmMzItYWM3ZC0zY2ZjYWRhOGIyY2QiLCJpZCI6NTM0Mzg2LCJzdWIiOiJBa3NhbmphbmExNDMiLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoiQUdPRSIsImlhdCI6MTc5MjkxMzk4OH0.3VYIeQec_W30qzmhZtbpHTfFt12yeeP07wZXWBJJjD0
+    let viewer = null;
+    let isStarting = false;
 
-    async function startMap() {
-      const viewer = new Cesium.Viewer(
-        "cesiumContainer",
-        {
-          terrain: Cesium.Terrain.fromWorldTerrain(),
-          animation: false,
-          timeline: false,
-          baseLayerPicker: false,
-          geocoder: false,
-          homeButton: false,
-          sceneModePicker: false,
-          navigationHelpButton: false
-        }
-      );
+    function showStatus(message, allowRetry = false) {
+      const status = document.getElementById("status");
+      status.replaceChildren();
 
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(
-          84.8, 21.2, 2500000
-        ),
-        orientation: {
-          heading: 0,
-          pitch: Cesium.Math.toRadians(-45),
-          roll: 0
-        }
-      });
+      const text = document.createElement("div");
+      text.textContent = message;
+      status.appendChild(text);
 
-      document.getElementById("status").textContent =
-        "Fire India World — India 3D Map";
+      if (allowRetry) {
+        const button = document.createElement("button");
+        button.textContent = "Retry Map";
+        button.onclick = startMap;
+        button.style.marginTop = "8px";
+        button.style.padding = "8px 12px";
+        status.appendChild(button);
+      }
     }
 
-    startMap().catch(function (error) {
-      document.getElementById("status").textContent =
-        "Map error: " + error.message;
-      console.error(error);
-    });
+    async function startMap() {
+      if (isStarting) return;
+      isStarting = true;
+
+      try {
+        showStatus("Cesium library लोड हो रही है...");
+
+        if (!window.cesiumScriptLoaded ||
+            typeof Cesium === "undefined") {
+          throw new Error(
+            "Cesium JavaScript लोड नहीं हुई। इंटरनेट जाँचें और Refresh करें।"
+          );
+        }
+
+        const token = 
+          eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6ImVCaHNBbnZvZ0VFMTkwQk8iLCJqdGkiOiIwNTljMjZlNC1hYTY4LTRmMzItYWM3ZC0zY2ZjYWRhOGIyY2QiLCJpZCI6NTM0Mzg2LCJzdWIiOiJBa3NhbmphbmExNDMiLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoiQUdPRSIsImlhdCI6MTc5MjkxNDcxN30.yzKBTc7LL68cI5fnbpQ1dn3Ftp1Fk8lNCrqQWf1SVo8
+
+        if (!token ||
+            token === "YOUR_NEW_CESIUM_ION_TOKEN") {
+          throw new Error(
+            "index.html में अपना नया Cesium ion token डालें।"
+          );
+        }
+
+        Cesium.Ion.defaultAccessToken = token;
+
+        showStatus("3D Earth और terrain लोड हो रहे हैं...");
+
+        if (viewer) {
+          viewer.destroy();
+          viewer = null;
+        }
+
+        viewer = new Cesium.Viewer(
+          "cesiumContainer",
+          {
+            terrain: Cesium.Terrain.fromWorldTerrain(),
+            animation: false,
+            timeline: false,
+            baseLayerPicker: false,
+            geocoder: false,
+            homeButton: false,
+            sceneModePicker: false,
+            navigationHelpButton: false,
+            infoBox: false,
+            selectionIndicator: false,
+            shouldAnimate: false
+          }
+        );
+
+        viewer.camera.setView({
+          destination: Cesium.Cartesian3.fromDegrees(
+            84.8, 21.2, 2500000
+          ),
+          orientation: {
+            heading: 0,
+            pitch: Cesium.Math.toRadians(-45),
+            roll: 0
+          }
+        });
+
+        viewer.scene.globe.enableLighting = true;
+
+        viewer.scene.renderError.addEventListener(
+          function (scene, error) {
+            showStatus(
+              "Render error: " + String(error),
+              true
+            );
+          }
+        );
+
+        showStatus(
+          "3D Earth तैयार हो रहा है। कृपया प्रतीक्षा करें..."
+        );
+
+        let ready = false;
+
+        viewer.scene.postRender.addEventListener(
+          function onFirstRender() {
+            if (ready) return;
+            ready = true;
+
+            showStatus(
+              "Fire India World — 3D Earth loaded. भारत पर zoom करें।"
+            );
+          }
+        );
+
+        viewer.scene.requestRender();
+
+      } catch (error) {
+        console.error("Cesium startup error:", error);
+
+        showStatus(
+          "Map error: " +
+          (error && error.message
+            ? error.message
+            : String(error)),
+          true
+        );
+      } finally {
+        isStarting = false;
+      }
+    }
+
+    window.addEventListener("load", startMap);
   </script>
 </body>
 </html>
